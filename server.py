@@ -5,7 +5,7 @@ import json
 import nolds
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://fpy-proj-frontend.vercel.app"])
 
 @app.route('/process', methods=['POST'])
 def process_data():
