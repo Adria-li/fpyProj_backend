@@ -128,7 +128,9 @@ def calculate_lyapunov(occupancy_time_series, emb_dim=6, matrix_dim=3):
 
 #     return all_lyapunov_results
 
-def min_max_normalize_lyapunov_fixed_range(all_lyapunov_results, min_value=-1.0, max_value=1.0):
+def min_max_normalize_lyapunov_fixed_range(all_lyapunov_results, min_value=-0.1, max_value=0.5):
+    print(f"Global Min Lyapunov: {min_value}")
+    print(f"Global Max Lyapunov: {max_value}")
     for det_id, det in all_lyapunov_results.items():
         det["normalized_lyapunov_exponents"] = [
             max(0.0, min(1.0, (x - min_value) / (max_value - min_value))) if np.isfinite(x) else 0.5
