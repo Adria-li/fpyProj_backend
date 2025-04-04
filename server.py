@@ -63,7 +63,7 @@ def process_data():
         calculate_output(res2, 1)
 
         # 进行标准归一化处理
-        standardized_results = min_max_normalize_lyapunov(raw_lyapunov_results)
+        standardized_results = min_max_normalize_lyapunov_fixed_range(raw_lyapunov_results)
 
         # 存储完整的结果
         all_lyapunov_results["results"] = standardized_results
@@ -90,42 +90,50 @@ def calculate_lyapunov(occupancy_time_series, emb_dim=6, matrix_dim=3):
     largest_lyap = lyap_exponents[0]  # 最大 Lyapunov 指数
     return largest_lyap
 
-def min_max_normalize_lyapunov(all_lyapunov_results):
-    """对所有 detector_id 的最大 Lyapunov 指数进行 Min-Max 归一化（所有 ID 共享同一尺度）"""
-    all_values = []
+# def min_max_normalize_lyapunov(all_lyapunov_results):
+#     """对所有 detector_id 的最大 Lyapunov 指数进行 Min-Max 归一化（所有 ID 共享同一尺度）"""
+#     all_values = []
     
-    # **收集所有 detector_id 的 Lyapunov 指数**
-    for det in all_lyapunov_results.values():
-        all_values.extend(det["lyapunov_exponents"])  # 统一存入列表
+#     # **收集所有 detector_id 的 Lyapunov 指数**
+#     for det in all_lyapunov_results.values():
+#         all_values.extend(det["lyapunov_exponents"])  # 统一存入列表
 
-    if not all_values:
-        return all_lyapunov_results  # 如果为空，则不做归一化
+#     if not all_values:
+#         return all_lyapunov_results  # 如果为空，则不做归一化
     
-    print("all_values:", all_values)
+#     print("all_values:", all_values)
     
-    # filtered_exponents = all_values[np.isfinite(all_values)].tolist()
-    filtered_exponents = [x for x in all_values if np.isfinite(x)]
-    print("filtered_exponents:", filtered_exponents)
+#     # filtered_exponents = all_values[np.isfinite(all_values)].tolist()
+#     filtered_exponents = [x for x in all_values if np.isfinite(x)]
+#     print("filtered_exponents:", filtered_exponents)
 
-    # **计算全局 min 和 max**
-    min_value = min(filtered_exponents)
-    max_value = max(filtered_exponents)
+#     # **计算全局 min 和 max**
+#     min_value = min(filtered_exponents)
+#     max_value = max(filtered_exponents)
 
-    # **打印 min 和 max 值**
-    print(f"Global Min Lyapunov: {min_value}")
-    print(f"Global Max Lyapunov: {max_value}")
+#     # **打印 min 和 max 值**
+#     print(f"Global Min Lyapunov: {min_value}")
+#     print(f"Global Max Lyapunov: {max_value}")
 
-    if max_value == min_value:  # 避免除零错误
-        for det_id, det in all_lyapunov_results.items():
-            det["normalized_lyapunov_exponents"] = [0.5 for _ in det["lyapunov_exponents"]]  # 若所有值相同，则设为 0.5
-        return all_lyapunov_results
+#     if max_value == min_value:  # 避免除零错误
+#         for det_id, det in all_lyapunov_results.items():
+#             det["normalized_lyapunov_exponents"] = [0.5 for _ in det["lyapunov_exponents"]]  # 若所有值相同，则设为 0.5
+#         return all_lyapunov_results
 
-    # **进行全局归一化**
+#     # **进行全局归一化**
+#     for det_id, det in all_lyapunov_results.items():
+#         det["normalized_lyapunov_exponents"] = [
+#             (value - min_value) / (max_value - min_value) for value in det["lyapunov_exponents"]
+#         ]
+
+#     return all_lyapunov_results
+
+def min_max_normalize_lyapunov_fixed_range(all_lyapunov_results, min_value=-1.0, max_value=1.0):
     for det_id, det in all_lyapunov_results.items():
         det["normalized_lyapunov_exponents"] = [
-            (value - min_value) / (max_value - min_value) for value in det["lyapunov_exponents"]
+            max(0.0, min(1.0, (x - min_value) / (max_value - min_value))) if np.isfinite(x) else 0.5
+            for x in det["lyapunov_exponents"]
         ]
-
     return all_lyapunov_results
 
 
